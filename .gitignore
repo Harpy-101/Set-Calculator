@@ -1,0 +1,10 @@
+/.vscode
+/bad_input.txt
+/lexer.o
+/myset.o
+/old_set.c
+/panic.o
+/set.o
+/t2.txt
+/text.c
+/valid.txt
