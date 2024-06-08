@@ -1,9 +1,4 @@
 #include "lexer.h"
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include "panic.h"
-#include "set.h"
 
 /* This is an array to store all of the valid commands. */
 command command_list[MAX_NUM_COMMANDS];
@@ -42,57 +37,6 @@ void build_command_list(command *cmd_list, char **command_arr, int *num_args_arr
 void setup() {
     build_command_list(command_list, command_arr, num_args_arr, MAX_NUM_COMMANDS);
 }
-/*
-void print_command_list(command *cmd_list, int command_num) {
-    int i;
-    for (i = 0; i < command_num; i++) {
-        printf("Command %d: %s, Number of arguments: %d\n", i, cmd_list[i].name, cmd_list[i].num_args);
-    }
-}
-*/
-/*
-void exe_command(char *input) {
-    int func_num;
-    int num_args;
-    uint8_t *args[3];  // Maximum 3 arguments expected
-
-    func_num = id_func(command_list, input);
-    if (func_num == -1) {
-        printf("Invalid command: %s\n", input);
-        return;
-    }
-
-    num_args = id_args(set_names, input, args);
-    if (num_args != command_list[func_num].num_args) {
-        printf("Invalid number of arguments.\n");
-        return;
-    }
-
-    printf("Executing %s with arguments:", command_list[func_num].name);
-    for (int i = 0; i < num_args; i++) {
-        printf(" %s", args[i]);
-    }
-    printf("\n");
-
-    // Example of calling the functions based on command
-    if (strcmp(command_list[func_num].name, "union_set") == 0) {
-       //union_set(sets[args[0] - (uint8_t *)set_name[0]], sets[args[1] - (uint8_t *)set_name[0]], sets[args[2] - (uint8_t *)set_name[0]]);
-        union_set(args[0], args[1], args[2]);
-    } else if (strcmp(command_list[func_num].name, "intersect_set") == 0) {
-        intersect_set(args[0], args[1], args[2]);
-    } else if (strcmp(command_list[func_num].name, "sub_set") == 0) {
-        sub_set(args[0], args[1], args[2]);
-    } else if (strcmp(command_list[func_num].name, "symdiff_set") == 0) {
-        symdiff_set(args[0], args[1], args[2]);
-    } else if (strcmp(command_list[func_num].name, "read_set") == 0) {
-        //read_set(args[0]);
-    } else if (strcmp(command_list[func_num].name, "print_set") == 0) {
-        print_set(args[0]);
-    } else if (strcmp(command_list[func_num].name, "stop") == 0) {
-        stop();
-    }
-}
-*/
 
 /**
  * @brief This function takes the user input and compares it to the known commands in this program in order to find a match. 
@@ -125,60 +69,6 @@ int id_func(command *command_list, char *input, char **marker) {
 }
 
 /**
- * @brief This function identifies the parameters the user wants to use the command with. It also checks how many parameters were entered and if they are in fact legal. 
- * 
- * @param set_name 
- * @param input 
- * @param args 
- * @return int 
- */
- /*
-int id_args(char **set_name, char *input, uint8_t *args[]) {
-    int args_num = 0, i;
-    char *command_end = strchr(input, ' ');
-    if (!command_end) {
-        return 0;
-    }
-
-    command_end++;
-
-    char *start = command_end;
-    char *end;
-
-    while ((end = strpbrk(start, ",\n'")) != NULL || *start != '\0') {
-        if (end == NULL) {
-            end = start + strlen(start);
-        }
-
-        while (isspace((unsigned char) *start)) {
-            start++;
-        }
-
-        while (end > start && isspace((unsigned char) *(end - 1))) { 
-            end--;
-        }
-
-        char temp = *end;
-        *end = '\0';
-
-        for (i = 0; i < 6; i++) {
-            if (strcmp(start, set_name[i]) == 0) {
-                args[args_num++] = (uint8_t *) set_name[i];
-                break;
-            }
-        }
-
-        *end = temp;
-        if (*end == '\0') {
-            break;
-        }
-        start = end + 1;
-    }
-    return args_num;
-}
-*/
-
-/**
  * @brief This function calls the function the user requested if it was legal.
  * 
  * @param input The user's input. 
@@ -189,7 +79,7 @@ void exe_command_2 (char *input, SET *set_list) {
     int num_args;
     char *marker = NULL;
     int id_comma;
-    SET *set_ptr[10];
+    SET *set_ptr[MAX_SET_PTR];
 
     /* id the function the user requestd */
     func_num = id_func(command_list, input, &marker);
@@ -203,9 +93,8 @@ void exe_command_2 (char *input, SET *set_list) {
         return;
     }
 
-    printf("working with func number: %d\n", func_num);
+    /*printf("working with func number: %d\n", func_num); */
 
-    /*input = marker;*/
     /* id the parameters */
     num_args = id_args_2(input, set_list, set_ptr, &marker);
     if (num_args == -1 && func_num != STOP_CASE) {
@@ -213,7 +102,6 @@ void exe_command_2 (char *input, SET *set_list) {
         return;
     }
     else if (num_args != command_list[func_num].num_args && func_num != STOP_CASE) {
-        /*printf("Invalid number of arguments.\n");*/
         if (num_args < command_list[func_num].num_args) {
             missing_parameter();
         }
@@ -238,10 +126,12 @@ void exe_command_2 (char *input, SET *set_list) {
         }
     }
 
+    /*
     printf("Executing %s with arguments:", command_list[func_num].name);
-    for (int i = 0; i < num_args; i++) {
+    for (i = 0; i < num_args; i++) {
         printf(" %s", set_ptr[i]->name);
     }
+    */
     printf("\n");
 
     if (strcmp(command_list[func_num].name, "read_set") == 0) {
@@ -279,14 +169,16 @@ void exe_command_2 (char *input, SET *set_list) {
 int id_args_2(char *input, SET *set_list, SET **set_ptr, char **marker) {
     int args_num = 0, i;
     char *command_end = strchr(input, ' ');
+    char *start;
+    char *end;
+    char temp;
     if (!command_end) {
         return 0;
     }
 
     command_end++;
 
-    char *start = command_end;
-    char *end;
+    start = command_end;
 
     while ((end = strpbrk(start, ",\n")) != NULL || *start != '\0') { /* the old accepted values were ",\n'"*/
         if (end == NULL) {
@@ -309,10 +201,10 @@ int id_args_2(char *input, SET *set_list, SET **set_ptr, char **marker) {
             end--;
         }
 
-        char temp = *end;
+        temp = *end;
         *end = '\0';
 
-        for (i = 0; i < 7; i++) {
+        for (i = 0; i < MAX_NUM_COMMANDS; i++) {
             if (i == 6) {
                 if (start == end) {
                     break;
@@ -356,6 +248,12 @@ int id_missing_comma(char *input) {
     return 1;
 }
 
+/**
+ * @brief This function looks for irrelevant characters after the command.
+ * 
+ * @param input The user's input.
+ * @return int "1" if such chars were detected else "0".
+ */
 int id_irreleven_chars(char *input) {
     int i;
     for (i = 0; input[i] != '\0'; i++) {
@@ -365,50 +263,3 @@ int id_irreleven_chars(char *input) {
     }
     return 0;
 }
-/* old-ish id_args_2 
-int id_args_2(char *input, SET *set_list, SET **set_ptr, char **marker) {
-    int args_num = 0, i;
-    char *command_end = strchr(input, ' ');
-    if (!command_end) {
-        return 0;
-    }
-
-    command_end++;
-
-    char *start = command_end;
-    char *end;
-
-    while ((end = strpbrk(start, ",\n'")) != NULL || *start != '\0') {
-        if (end == NULL) {
-            end = start + strlen(start);
-        }
-
-        while (isspace((unsigned char) *start)) {
-            start++;
-        }
-
-        while (end > start && isspace((unsigned char) *(end - 1))) { 
-            end--;
-        }
-
-        char temp = *end;
-        *end = '\0';
-
-        for (i = 0; i < 6; i++) {
-            if (strcmp(start, set_list[i].name) == 0) {
-                set_ptr[args_num++] = &set_list[i];
-                *marker = end+1;
-                break;
-            }
-        }
-
-        *end = temp;
-        if (*end == '\0') {
-            break;
-        }
-        start = end + 1;
-    }
-    return args_num;
-
-}
-*/

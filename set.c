@@ -1,10 +1,6 @@
-#include <stdint.h>
-#include <stdio.h>
-#include <ctype.h>
 #include "set.h"
-#include "panic.h"
 
-SET set_list[6];/*An array to hold all the known sets in this program */
+SET set_list[6]; /*An array to hold all the known sets in this program */
 
 char *set_names1[] = {"SETA", "SETB", "SETC", "SETD", "SETE", "SETF"};
 
@@ -18,7 +14,7 @@ void build_set_list(SET *set_list, char **set_names) {
     int i, j;
     for (i = 0; i < MAX_SETS; i++) {
         strcpy(set_list[i].name, set_names[i]);
-        for (j = 0; j < 16; j++) {
+        for (j = 0; j < LAST_SET_ELEMENT; j++) {
             set_list[i].val[j] = 0; // Initialize all bits to 0
         }
     }
@@ -58,13 +54,13 @@ int get_val(SET *set, int num) {
 }
 
 /**
- * @brief The function assigns values for a given set. 
+ * @brief The function assigns values to a given set. 
  * 
  * @param set The set that would get assigned values. 
  * @param input The array of chars holding the values that will get assigned to the set. 
  */
 void read_set2(SET *set, char *input) {
-    int arr_val[1024] = {[0 ... 1023] = MAX_VAL};
+    int arr_val[BUFFER_SIZE] = {[0 ... 1023] = MAX_VAL};
     int status;
     status = id_illegal_chars(input, arr_val);
     if (status == 0) { 
@@ -82,15 +78,15 @@ void read_set2(SET *set, char *input) {
  */
 int id_illegal_chars(char *input, int *arr_val) {
     int i = 0, j = 0, k = 0, val;
-    char buffer[10] = {0}; // buffer to hold the current number as a string
+    char buffer[CHAR_BUFFER] = {0}; /* buffer to hold the current number as a string */
 
     while (input[i] != '\0') {
         if ((isdigit(input[i]) || input[i] == '-')) {
-            buffer[k++] = input[i]; // collect digits and possible minus sign
+            buffer[k++] = input[i]; /* collect digits and possible minus sign*/
         } else if (input[i] == ',' || isspace(input[i])) {
             if (k > 0) {
-                buffer[k] = '\0'; // Null-terminate the buffer
-                val = atoi(buffer); // Convert to integer
+                buffer[k] = '\0'; /* Null-terminate the buffer*/
+                val = atoi(buffer); /* Convert to integer */
                 if (val > SET_MAX_VAL || (val < SET_LOWEST_VAL && val != TERMINATION_VAL)) {
                     illegal_value_out_of_range();
                     return 0;
@@ -98,15 +94,15 @@ int id_illegal_chars(char *input, int *arr_val) {
                 if (id_duplicates_int(arr_val, j, val)) {
                     arr_val[j++] = val;
                 }
-                k = 0; // Reset buffer index for the next number
+                k = 0; /* Reset buffer index for the next number */
             }
             if (input[i] == ',' && input[i - 1] == ',') {
                 consecutive_commas();
-                return 0; // Error: consecutive commas
+                return 0; /* Error: consecutive commas */
             }
         } else {
             illegal_value_not_a_number();
-            return 0; // Error: illegal character found
+            return 0; /* Error: illegal character found */
         }
         i++;
     }
@@ -116,17 +112,17 @@ int id_illegal_chars(char *input, int *arr_val) {
         val = atoi(buffer);
         if (val != TERMINATION_VAL) {
             missing_set_terminator();
-            return 0; // Error: missing -1
+            return 0; /* Error: missing -1 */
         }
         if (id_duplicates_int(arr_val, j, val)) {
             arr_val[j++] = val;
         }
     }
     
-    arr_val[j] = MAX_VAL; // Add terminator
+    arr_val[j] = MAX_VAL; /* Add terminator */
     qsort(arr_val, j, sizeof(int), cp_ascending);
 
-    return 1; // Successfully processed the input
+    return 1; /* Successfully processed the input */
 }
 
 /**
@@ -137,7 +133,7 @@ int id_illegal_chars(char *input, int *arr_val) {
  */
 void change_set(SET *set, int *arr) {
     reset_set(set);
-    for (int i = 0; i < 128 && arr[i] != MAX_VAL; i++) {
+    for (int i = 0; i < ARR_VAL_LEN && arr[i] != MAX_VAL; i++) {
         add_val(set, arr[i]);
     }
 }
@@ -177,7 +173,7 @@ int cp_ascending(const void *a, const void *b) {
  */
 void print_set(SET *set) {
     int count = 0;
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < ARR_VAL_LEN; i++) {
         if (get_val(set, i)) {
             if (count > 0) {
                 printf(", ");
@@ -204,9 +200,9 @@ void print_set(SET *set) {
  * @param SET3 Result paremeter.
  */
 void union_set(SET *SET1, SET *SET2, SET *SET3) {
-    int arr[128] = {[0 ... 127] = MAX_VAL};
+    int arr[ARR_VAL_LEN] = {[0 ... 127] = MAX_VAL};
     int j = 0;
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < ARR_VAL_LEN; i++) {
         if (get_val(SET1, i) || get_val(SET2, i)) {
             arr[j++] =  i;
         }
@@ -216,7 +212,7 @@ void union_set(SET *SET1, SET *SET2, SET *SET3) {
 }
 
 /**
- * @briefThis function finds the intersecting values between SETA and SETB. it then stores the result in SET3.
+ * @brief This function finds the intersecting values between SETA and SETB. it then stores the result in SET3.
  * 
  * @param SET1 First parameter.
  * @param SET2 Second paremeter.
@@ -224,9 +220,9 @@ void union_set(SET *SET1, SET *SET2, SET *SET3) {
 
  */
 void intersect_set(SET *SET1, SET *SET2, SET *SET3) {
-    int arr[128] = {[0 ... 127] = MAX_VAL};
+    int arr[ARR_VAL_LEN] = {[0 ... 127] = MAX_VAL};
     int j = 0;
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < ARR_VAL_LEN; i++) {
         if (get_val(SET1, i) && get_val(SET2, i)) {
             arr[j++] = i;
         }
@@ -241,22 +237,22 @@ void intersect_set(SET *SET1, SET *SET2, SET *SET3) {
  * @param SET The set in question. 
  */
 void reset_set(SET *set) {
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < LAST_SET_ELEMENT; i++) {
         set->val[i] = 0;
     }
 }
 
 /**
- * @briefThis function performs the subtraction between SET1 and SET2. It then stores the result in SET 3.  
+ * @brief This function performs the subtraction between SET1 and SET2. It then stores the result in SET 3.  
  * 
  * @param SET1 First parameter.
  * @param SET2 Second paremeter.
  * @param SET3 Result paremeter.
  */
 void sub_set(SET *SET1, SET *SET2, SET *SET3) {
-    int arr[128] = {[0 ... 127] = MAX_VAL};
+    int arr[ARR_VAL_LEN] = {[0 ... 127] = MAX_VAL};
     int j = 0;
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < ARR_VAL_LEN; i++) {
         if (get_val(SET1, i) && !get_val(SET2, i)) {
             arr[j++] = i;
         }
@@ -264,29 +260,18 @@ void sub_set(SET *SET1, SET *SET2, SET *SET3) {
     reset_set(SET3);
     change_set(SET3, arr);
 }
-/*
-int set_len(SET *set) {
-    int count = 0;
-    for (int i = 0; i < 128; i++) {
-        if (get_set(set, i)) {
-            count++;
-        }
-    }
-    return count;
-}
-*/
 
 /**
- * @briefThis function finds the symmetrical difference between SET1 and SET2. It then stores the result in SET3.
+ * @brief This function finds the symmetrical difference between SET1 and SET2. It then stores the result in SET3.
  * 
  * @param SET1 First parameter.
  * @param SET2 Second paremeter.
  * @param SET3 Result paremeter.
  */
 void symdiff_set(SET *SET1, SET *SET2, SET *SET3) {
-    int arr[128] = {[0 ... 127] = MAX_VAL};
+    int arr[ARR_VAL_LEN] = {[0 ... 127] = MAX_VAL};
     int j = 0;
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < ARR_VAL_LEN; i++) {
         if (get_val(SET1, i) != get_val(SET2, i)) {
             arr[j++] = i;
         }
@@ -294,18 +279,6 @@ void symdiff_set(SET *SET1, SET *SET2, SET *SET3) {
     reset_set(SET3);
     change_set(SET3, arr);
 }
-
-/*
-int extract_set_vals(SET *set, int *arr) {
-    int count = 0;
-    for (int i = 0; i < 128; i++) {
-        if (get_set(set, i)) {
-            arr[count++] = i;
-        }
-    }
-    return count;
-}
-*/
 
 /**
  * @brief This function stops the program. 

@@ -3,14 +3,16 @@
 #include "lexer.h"
 #include "panic.h"
 
-#define BUFFER_SIZE 1024 
+
 int main() {
     char *input = NULL;
+    int count = 1;
 
     build(); 
     setup();
 
     while (1) {
+        printf("========================= Run number: \x1B[32m%d\033[0m  =========================\n", count);
         printf("\x1b[35mEnter command!\033[0m \n");
         input = calloc(BUFFER_SIZE, sizeof(char));
         if (input == NULL) {
@@ -24,8 +26,7 @@ int main() {
                 continue;
             }
             printf("Your input is: %s\n", input);
-            input[strcspn(input, "\n")] = 0; // Remove the trailing newline character
-            printf("========================= Result =========================\n");
+            input[strcspn(input, "\n")] = 0; /* Remove the trailing newline character */
             exe_command_2(input, set_list);
         } else {
             if (feof(stdin)) {
@@ -39,7 +40,7 @@ int main() {
             }
         }
 
-    
+        count++;
         free(input);
     }
 
